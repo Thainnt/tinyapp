@@ -59,16 +59,24 @@ app.get("/set", (req, res) => {
    res.render('urls_new');
  });
 
- //Add POST route for form submission
+ //Add POST route for form submission and redirect to newly create link
  app.post('/urls', (req, res) => {
    console.log(req.body); // Log the POST request body to the console
-   res.send('Ok');
+   const generateShortURL = generateRandomString(6);
+   urlDatabase[generateShortURL] = req.body.longURL;
+   res.redirect(`/urls/${generateShortURL}`);
  });
 
  //Create a route for displaying a single URL
  app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render('urls_show', templateVars);
+});
+
+//Redirect the short URL to the original long URL
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 });
 
 app.listen(PORT, () => {
