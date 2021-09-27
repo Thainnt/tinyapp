@@ -19,8 +19,9 @@ function generateRandomString(strLength) {
     randomCode = Math.floor((Math.random() * (122 - 65)) + 65);
     if (randomCode > 90 && randomCode < 97) {
       randomStr += Math.floor(Math.random() * 10);
+    } else {
+      randomStr += String.fromCharCode(randomCode);
     }
-    randomStr += String.fromCharCode(randomCode);
   }
   return randomStr;
 }
