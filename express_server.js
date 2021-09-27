@@ -1,13 +1,29 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+const bodyParser = require('body-parser');
 
 app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({extended: true}));
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+function generateRandomString(strLength) {
+  //alphabet code from 65-90 & 97-122
+  let randomStr = '';
+  
+  for (let i = 0; i < strLength; i++) {
+    randomCode = Math.floor((Math.random() * (122 - 65)) + 65);
+    if (randomCode > 90 && randomCode < 97) {
+      randomStr += Math.floor(Math.random() * 10);
+    }
+    randomStr += String.fromCharCode(randomCode);
+  }
+  return randomStr;
+}
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -35,6 +51,17 @@ app.get("/set", (req, res) => {
  app.get('/urls', (req, res) => {
    const templateVars = { urls: urlDatabase };
    res.render('urls_index', templateVars);
+ });
+
+ //Add GET route for new link creation
+ app.get('/urls/new', (req, res) => {
+   res.render('urls_new');
+ });
+
+ //Add POST route for form submission
+ app.post('/urls', (req, res) => {
+   console.log(req.body); // Log the POST request body to the console
+   res.send('Ok');
  });
 
  //Create a route for displaying a single URL
