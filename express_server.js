@@ -11,12 +11,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-function generateRandomString(strLength) {
+const generateRandomString = strLength => {
   //alphabet code from 65-90 & 97-122
   let randomStr = '';
   
   for (let i = 0; i < strLength; i++) {
-    randomCode = Math.floor((Math.random() * (122 - 65)) + 65);
+    const randomCode = Math.floor((Math.random() * (122 - 65)) + 65);
     if (randomCode > 90 && randomCode < 97) {
       randomStr += Math.floor(Math.random() * 10);
     } else {
@@ -24,7 +24,7 @@ function generateRandomString(strLength) {
     }
   }
   return randomStr;
-}
+};
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -39,36 +39,27 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/set", (req, res) => {
-  const a = 1;
-  res.send(`a = ${a}`);
- });
- 
- app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`);
- });
+//Display URLs in database
+app.get('/urls', (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render('urls_index', templateVars);
+});
 
- //Display URLs in database
- app.get('/urls', (req, res) => {
-   const templateVars = { urls: urlDatabase };
-   res.render('urls_index', templateVars);
- });
+//Add GET route for new link creation
+app.get('/urls/new', (req, res) => {
+  res.render('urls_new');
+});
 
- //Add GET route for new link creation
- app.get('/urls/new', (req, res) => {
-   res.render('urls_new');
- });
+//Add POST route for form submission and redirect to newly create link
+app.post('/urls', (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  const generateShortURL = generateRandomString(6);
+  urlDatabase[generateShortURL] = req.body.longURL;
+  res.redirect(`/urls/${generateShortURL}`);
+});
 
- //Add POST route for form submission and redirect to newly create link
- app.post('/urls', (req, res) => {
-   console.log(req.body); // Log the POST request body to the console
-   const generateShortURL = generateRandomString(6);
-   urlDatabase[generateShortURL] = req.body.longURL;
-   res.redirect(`/urls/${generateShortURL}`);
- });
-
- //Create a route for displaying a single URL
- app.get('/urls/:shortURL', (req, res) => {
+//Create a route for displaying a single URL
+app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render('urls_show', templateVars);
 });
