@@ -17,6 +17,11 @@
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
       </div>
       <a href='#'>Create new shorten URL</a>
+      <h5>Edit URL</h5>
+      <div>
+        <label>New URL:</label>
+        <form method="POST" action="/urls/<%= shortURL %>"><input type='text' placeholder="http://" name='longURL'><input type='submit' value='Submit'></form>
+      </div>
     <div class="card-footer text-muted"></div>
   </div>
   <!-- Bootstrap JS -->

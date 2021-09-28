@@ -72,7 +72,13 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Add POST route to remove URL
 app.post('/urls/:shortURL/delete', (req, res) => {
-  delete urlDatabase[req.params.shortURL];
+  delete urlDatabase[req.body.shortURL];
+  res.redirect('/urls');
+});
+
+//Add POST route to update URL
+app.post('/urls/:shortURL', (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect('/urls');
 });
 
