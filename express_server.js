@@ -68,7 +68,7 @@ const createNewUser = (name, email, password, userDB) => {
   return id;
 };
 
-// Create routes
+// CREATE ROUTES
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -186,6 +186,11 @@ app.post('/register', (req, res) => {
   res.cookie('user_id', userID);
   
   res.redirect('/urls');
+});
+
+//Add route for login
+app.get('/login', (req, res) => {
+  res.render('login');
 });
 
 app.listen(PORT, () => {
