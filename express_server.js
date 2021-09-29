@@ -166,6 +166,11 @@ app.post('/register', (req, res) => {
   //Retrieve submitted data
   console.log(req.body);
   const {name, email, password} = req.body;
+  console.log({name, email, password});
+  //Check if email and password are not empty strings
+  if (email ==='' && password === '') {
+    res.status(400).send('Please enter valid email and/or password');
+  }
 
   //Check if user is  already in database
   const userFound = findUserByEmail(email, userDatabase);
@@ -176,7 +181,7 @@ app.post('/register', (req, res) => {
 
   //Add user into database if this is a new user
   const userID = createNewUser(name, email, password, userDatabase);
-
+  console.log('new user: ', userDatabase[userID]);
   // Set user_id to cookie value
   res.cookie('user_id', userID);
   
