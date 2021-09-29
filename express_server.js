@@ -18,7 +18,7 @@ const userDatabase = {
     id: 'm3o0Ww',
     name: 'meow',
     email: 'meow@kitty.cat',
-    password: 'jump-sleep-yawn'
+    password: 'jump'
   },
   '1zIziz': {
     id: '1zIziz',
@@ -66,6 +66,18 @@ const createNewUser = (name, email, password, userDB) => {
   };
 
   return id;
+};
+
+const authenticateUser = (email, password, userDB) => {
+  //Retrieve user data from database
+  const userFound = findUserByEmail(email, userDB);
+
+  //check if input password match with database
+  if (userFound && userFound.password === password) {
+    return userFound;
+  }
+
+  return false;
 };
 
 // CREATE ROUTES
@@ -144,15 +156,9 @@ app.post('/urls/:shortURL', (req, res) => {
   res.redirect('/urls');
 });
 
-//Add POST route for username input and login
-app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
-});
-
 //Add POST route for logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('username', req.body.username);
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -197,6 +203,25 @@ app.get('/login', (req, res) => {
     activeUser: null
   }
   res.render('login', templateVars);
+});
+
+//Add login handler
+app.post('/login', (req, res) => {
+  //Retrieve submitted data
+  console.log(req.body);
+  const {email, password} = req.body;
+  console.log({email, password});
+
+  //Check if login information is correct
+  const activeUser = authenticateUser(email, password, userDatabase);
+  if (activeUser) {
+    res.cookie('user_id', activeUser.id);
+
+    res.redirect('/urls');
+    return;
+  }
+
+  res.status(400).send('Incorrect email or password');
 });
 
 app.listen(PORT, () => {
