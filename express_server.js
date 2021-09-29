@@ -158,7 +158,10 @@ app.post('/logout', (req, res) => {
 
 // Add GET route for register page
 app.get('/register', (req, res) => {
-  res.render('registration');
+  templateVars = {
+    activeUser: null
+  }
+  res.render('registration', templateVars);
 });
 
 //Add resigtration handler
@@ -190,7 +193,10 @@ app.post('/register', (req, res) => {
 
 //Add route for login
 app.get('/login', (req, res) => {
-  res.render('login');
+  templateVars = {
+    activeUser: null
+  }
+  res.render('login', templateVars);
 });
 
 app.listen(PORT, () => {
