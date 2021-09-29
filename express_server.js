@@ -43,16 +43,21 @@ app.get("/hello", (req, res) => {
 
 //Display URLs in database
 app.get('/urls', (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     urls: urlDatabase,
     username: req.cookies['username']
   };
   res.render('urls_index', templateVars);
+  console.log("urls: ", req.cookies);
 });
 
 //Add GET route for new link creation
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies['username']
+  };
+  res.render('urls_new', templateVars);
 });
 
 //Add POST route for form submission and redirect to newly create link
@@ -65,7 +70,7 @@ app.post('/urls', (req, res) => {
 
 //Create a route for displaying a single URL
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],
     username: req.cookies['username']
   };
@@ -94,8 +99,17 @@ app.post('/urls/:shortURL', (req, res) => {
 app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
   res.redirect('/urls');
-  console.log('res: ', req.cookies["username"]);
+  console.log('login: ',req.cookies);
 });
+
+//Add POST route for logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('username', req.body.username);
+  res.redirect('/urls');
+  console.log('logout: ',req.cookies);
+});
+
+// console.log(req.cookies["username"]);
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
