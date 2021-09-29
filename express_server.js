@@ -28,6 +28,7 @@ const userDatabase = {
   }
 };
 
+// HELPER FUNCTIONS
 const generateRandomString = strLength => {
   //alphabet code from 65-90 & 97-122
   let randomStr = '';
@@ -43,6 +44,31 @@ const generateRandomString = strLength => {
   return randomStr;
 };
 
+const findUserByEmail = (email, usersDB) => {
+  for (let id in usersDB) {
+    const user = usersDB[id];
+    if (email === user.email) {
+      return user;
+    }
+  }
+  
+  return false;
+};
+
+const createNewUser = (name, email, password, userDB) => {
+  const id = generateRandomString(6);
+
+  userDB[id] = {
+    id,
+    name,
+    email,
+    password
+  };
+
+  return id;
+};
+
+// Create routes
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -58,18 +84,24 @@ app.get("/hello", (req, res) => {
 
 //Display URLs in database
 app.get('/urls', (req, res) => {
+  //Retrieve current user id
+  const userId = req.cookies['user_id'];
+  
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies['username']
+    activeUser: userDatabase[userId]
   };
   res.render('urls_index', templateVars);
 });
 
 //Add GET route for new link creation
 app.get('/urls/new', (req, res) => {
+  //Retrieve current user id
+  const userId = req.cookies['user_id'];
+
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies['username']
+    activeUser: userDatabase[userId]
   };
   res.render('urls_new', templateVars);
 });
@@ -84,9 +116,12 @@ app.post('/urls', (req, res) => {
 
 //Create a route for displaying a single URL
 app.get('/urls/:shortURL', (req, res) => {
+  //Retrieve current user id
+  const userId = req.cookies['user_id'];
+
   const templateVars = {
     shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies['username']
+    activeUser: userDatabase[userId]
   };
   res.render('urls_show', templateVars);
 });
@@ -128,17 +163,23 @@ app.get('/register', (req, res) => {
 
 //Add resigtration handler
 app.post('/register', (req, res) => {
-  //Add user to user Database
-  const genUserID = generateRandomString(6);
-  userDatabase[genUserID] = {};
-  userDatabase[genUserID].id = genUserID;
-  userDatabase[genUserID].name = req.body.name;
-  userDatabase[genUserID].email = req.body.email;
-  userDatabase[genUserID].password = req.body.password;
+  //Retrieve submitted data
+  console.log(req.body);
+  const {name, email, password} = req.body;
 
-  // Set user_id cookie
-  res.cookie('user_id', genUserID);
-  console.log(userDatabase[genUserID]);
+  //Check if user is  already in database
+  const userFound = findUserByEmail(email, userDatabase);
+  if (userFound) {
+    res.status(403).send(`User with ${email} already exists!`);
+    return;
+  }
+
+  //Add user into database if this is a new user
+  const userID = createNewUser(name, email, password, userDatabase);
+
+  // Set user_id to cookie value
+  res.cookie('user_id', userID);
+  
   res.redirect('/urls');
 });
 
