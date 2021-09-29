@@ -13,6 +13,21 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const userDatabase = {
+  'm3o0Ww': {
+    id: 'm3o0Ww',
+    name: 'meow',
+    email: 'meow@kitty.cat',
+    password: 'jump-sleep-yawn'
+  },
+  '1zIziz': {
+    id: '1zIziz',
+    name: 'et',
+    email: 'ufo@iz1z.iz',
+    password: '@#$%^&*-)(*&^%'
+  }
+};
+
 const generateRandomString = strLength => {
   //alphabet code from 65-90 & 97-122
   let randomStr = '';
@@ -109,6 +124,22 @@ app.post('/logout', (req, res) => {
 // Add GET route for register page
 app.get('/register', (req, res) => {
   res.render('registration');
+});
+
+//Add resigtration handler
+app.post('/register', (req, res) => {
+  //Add user to user Database
+  const genUserID = generateRandomString(6);
+  userDatabase[genUserID] = {};
+  userDatabase[genUserID].id = genUserID;
+  userDatabase[genUserID].name = req.body.name;
+  userDatabase[genUserID].email = req.body.email;
+  userDatabase[genUserID].password = req.body.password;
+
+  // Set user_id cookie
+  res.cookie('user_id', genUserID);
+  console.log(userDatabase[genUserID]);
+  res.redirect('/urls');
 });
 
 app.listen(PORT, () => {
