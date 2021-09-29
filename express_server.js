@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -42,7 +43,10 @@ app.get("/hello", (req, res) => {
 
 //Display URLs in database
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies['username']
+  };
   res.render('urls_index', templateVars);
 });
 
@@ -61,7 +65,10 @@ app.post('/urls', (req, res) => {
 
 //Create a route for displaying a single URL
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { 
+    shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies['username']
+  };
   res.render('urls_show', templateVars);
 });
 
@@ -87,6 +94,7 @@ app.post('/urls/:shortURL', (req, res) => {
 app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
   res.redirect('/urls');
+  console.log('res: ', req.cookies["username"]);
 });
 
 app.listen(PORT, () => {
