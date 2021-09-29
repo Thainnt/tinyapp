@@ -48,7 +48,6 @@ app.get('/urls', (req, res) => {
     username: req.cookies['username']
   };
   res.render('urls_index', templateVars);
-  console.log("urls: ", req.cookies);
 });
 
 //Add GET route for new link creation
@@ -99,17 +98,18 @@ app.post('/urls/:shortURL', (req, res) => {
 app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
   res.redirect('/urls');
-  console.log('login: ',req.cookies);
 });
 
 //Add POST route for logout
 app.post('/logout', (req, res) => {
   res.clearCookie('username', req.body.username);
   res.redirect('/urls');
-  console.log('logout: ',req.cookies);
 });
 
-// console.log(req.cookies["username"]);
+// Add GET route for register page
+app.get('/register', (req, res) => {
+  res.render('registration');
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
