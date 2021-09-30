@@ -3,6 +3,8 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
+const salt = bcrypt.genSaltSync(10);
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
@@ -19,16 +21,19 @@ const urlDatabase = {
   }
 };
 
+const hashedPassword1 = bcrypt.hashSync("jump", salt);
+const hashedPassword2 = bcrypt.hashSync("0000", salt);
+
 const userDatabase = {
   'm3o0Ww': {
     id: 'm3o0Ww',
     email: 'meow@kitty.cat',
-    password: 'jump'
+    password: hashedPassword1
   },
   '1zIziz': {
     id: '1zIziz',
-    email: 'ufo@iz1z.iz',
-    password: '0000'
+    email: 'ufo@iz.iz',
+    password: hashedPassword2
   }
 };
 
@@ -76,9 +81,13 @@ const authenticateUser = (email, password, userDB) => {
   const userFound = findUserByEmail(email, userDB);
 
   //check if input password match with database
-  if (userFound && userFound.password === password) {
-    return userFound;
+  if (userFound){
+    if (bcrypt.compareSync(password,userFound.password)) {
+      return userFound;
+    }
+    console.log('Incorrect password');
   }
+  console.log('Incorrect email');
 
   return false;
 };
@@ -102,6 +111,10 @@ app.get("/", (req, res) => {
 //Route for URL Database
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+});
+
+app.get("/user.json", (req, res) => {
+  res.json(userDatabase);
 });
 
 app.get("/hello", (req, res) => {
@@ -230,7 +243,8 @@ app.get('/register', (req, res) => {
 app.post('/register', (req, res) => {
   //Retrieve submitted data
   console.log('register data: ', req.body);
-  const {email, password} = req.body;
+  const email = req.body.email;
+  let password = req.body.password;
   //Check if email and password are not empty strings
   if (email ==='' && password === '') {
     res.status(400).send('Please enter valid email and/or password');
@@ -243,6 +257,8 @@ app.post('/register', (req, res) => {
     return;
   }
 
+  //hash user input password
+  password = bcrypt.hashSync(password, salt);
   //Add user into database if this is a new user
   const userID = createNewUser(email, password, userDatabase);
   console.log('new user: ', userDatabase[userID]);
