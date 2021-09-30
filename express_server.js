@@ -16,13 +16,11 @@ const urlDatabase = {
 const userDatabase = {
   'm3o0Ww': {
     id: 'm3o0Ww',
-    name: 'meow',
     email: 'meow@kitty.cat',
     password: 'jump'
   },
   '1zIziz': {
     id: '1zIziz',
-    name: 'et',
     email: 'ufo@iz1z.iz',
     password: '@#$%^&*-)(*&^%'
   }
@@ -55,12 +53,11 @@ const findUserByEmail = (email, usersDB) => {
   return false;
 };
 
-const createNewUser = (name, email, password, userDB) => {
+const createNewUser = (email, password, userDB) => {
   const id = generateRandomString(6);
 
   userDB[id] = {
     id,
-    name,
     email,
     password
   };
@@ -110,17 +107,25 @@ app.get('/urls', (req, res) => {
 app.get('/urls/new', (req, res) => {
   //Retrieve current user id
   const userId = req.cookies['user_id'];
+  console.log(userId);
 
-  const templateVars = {
-    urls: urlDatabase,
-    activeUser: userDatabase[userId]
-  };
-  res.render('urls_new', templateVars);
+  if (userId) {
+    const templateVars = {
+      urls: urlDatabase,
+      activeUser: userDatabase[userId]
+    };
+    
+    res.render('urls_new', templateVars);
+  } 
+  templateVars = {
+    activeUser: null
+  }
+  res.render('login', templateVars);
 });
 
 //Add POST route for form submission and redirect to newly create link
 app.post('/urls', (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  console.log('create from link: ', req.body); // Log the POST request body to the console
   const generateShortURL = generateRandomString(6);
   urlDatabase[generateShortURL] = req.body.longURL;
   res.redirect(`/urls/${generateShortURL}`);
@@ -173,9 +178,8 @@ app.get('/register', (req, res) => {
 //Add resigtration handler
 app.post('/register', (req, res) => {
   //Retrieve submitted data
-  console.log(req.body);
-  const {name, email, password} = req.body;
-  console.log({name, email, password});
+  console.log('register data: ', req.body);
+  const {email, password} = req.body;
   //Check if email and password are not empty strings
   if (email ==='' && password === '') {
     res.status(400).send('Please enter valid email and/or password');
@@ -189,7 +193,7 @@ app.post('/register', (req, res) => {
   }
 
   //Add user into database if this is a new user
-  const userID = createNewUser(name, email, password, userDatabase);
+  const userID = createNewUser(email, password, userDatabase);
   console.log('new user: ', userDatabase[userID]);
   // Set user_id to cookie value
   res.cookie('user_id', userID);
@@ -208,9 +212,8 @@ app.get('/login', (req, res) => {
 //Add login handler
 app.post('/login', (req, res) => {
   //Retrieve submitted data
-  console.log(req.body);
   const {email, password} = req.body;
-  console.log({email, password});
+  console.log('login info: ', {email, password});
 
   //Check if login information is correct
   const activeUser = authenticateUser(email, password, userDatabase);
