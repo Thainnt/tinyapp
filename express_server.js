@@ -5,10 +5,17 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const salt = bcrypt.genSaltSync(10);
+const cookieSession = require('cookie-session');
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+app.use(
+  cookieSession ({
+  name: "session",
+  keys: ['value', 'another value'],
+  })
+);
 
 const urlDatabase = {
   "b2xVn2": {
@@ -124,7 +131,7 @@ app.get("/hello", (req, res) => {
 //Display URLs in database
 app.get('/urls', (req, res) => {
   //Retrieve current user id
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id; //req.cookies['user_id'];
 
   //Filter urls belong to userId
   const filteredUrls = urlsForUser(userId);
@@ -140,7 +147,7 @@ app.get('/urls', (req, res) => {
 //Add GET route for new link creation
 app.get('/urls/new', (req, res) => {
   //Retrieve current user id
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id; //req.cookies['user_id'];
   console.log(userId);
 
   if (userId) {
@@ -161,7 +168,7 @@ app.get('/urls/new', (req, res) => {
 //Add POST route for form submission and redirect to newly create link
 app.post('/urls', (req, res) => {
   //Retrieve current user id
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id; //req.cookies['user_id'];
 
   const generateShortURL = generateRandomString(6);
   urlDatabase[generateShortURL] = {};
@@ -174,7 +181,7 @@ app.post('/urls', (req, res) => {
 //Create a route for displaying a single URL
 app.get('/urls/:shortURL', (req, res) => {
   //Retrieve current user id
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id; //req.cookies['user_id'];
 
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
@@ -203,7 +210,7 @@ app.get("/u/:shortURL", (req, res) => {
 //Add POST route to remove URL
 app.post('/urls/:shortURL/delete', (req, res) => {
   //Retrieve current user id
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id; //req.cookies['user_id'];
   const activeUser = userDatabase[userId];
 
   if (urlDatabase[req.body.shortURL].userID === userId) {
@@ -216,7 +223,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 //Add POST route to update URL
 app.post('/urls/:shortURL', (req, res) => {
   //Retrieve current user id
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id; //req.cookies['user_id'];
   const activeUser = userDatabase[userId];
 
   if (urlDatabase[req.params.shortURL].userID === userId) {
@@ -227,7 +234,8 @@ app.post('/urls/:shortURL', (req, res) => {
 
 //Add POST route for logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  // res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -263,8 +271,9 @@ app.post('/register', (req, res) => {
   const userID = createNewUser(email, password, userDatabase);
   console.log('new user: ', userDatabase[userID]);
   // Set user_id to cookie value
-  res.cookie('user_id', userID);
-  
+  // res.cookie('user_id', userID);
+  req.session.user_id = userID;
+
   res.redirect('/urls');
 });
 
@@ -285,7 +294,8 @@ app.post('/login', (req, res) => {
   //Check if login information is correct
   const activeUser = authenticateUser(email, password, userDatabase);
   if (activeUser) {
-    res.cookie('user_id', activeUser.id);
+    // res.cookie('user_id', activeUser.id);
+    req.session.user_id = activeUser.id;
 
     res.redirect('/urls');
     return;
