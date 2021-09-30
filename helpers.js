@@ -16,7 +16,7 @@ const generateRandomString = strLength => {
   return randomStr;
 };
 
-const findUserByEmail = (email, usersDB) => {
+const getUserByEmail = (email, usersDB) => {
   for (let id in usersDB) {
     const user = usersDB[id];
     if (email === user.email) {
@@ -41,7 +41,7 @@ const createNewUser = (email, password, userDB) => {
 
 const authenticateUser = (email, password, userDB) => {
   //Retrieve user data from database
-  const userFound = findUserByEmail(email, userDB);
+  const userFound = getUserByEmail(email, userDB);
 
   //check if input password match with database
   if (userFound){
@@ -55,4 +55,4 @@ const authenticateUser = (email, password, userDB) => {
   return false;
 };
 
-module.exports = { generateRandomString, findUserByEmail, createNewUser, authenticateUser };
+module.exports = { generateRandomString, getUserByEmail, createNewUser, authenticateUser };

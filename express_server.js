@@ -8,7 +8,7 @@ const salt = bcrypt.genSaltSync(10);
 const cookieSession = require('cookie-session');
 const {
   generateRandomString,
-  findUserByEmail,
+  getUserByEmail,
   createNewUser,
   authenticateUser,
 } = require('./helpers');
@@ -210,7 +210,7 @@ app.post('/register', (req, res) => {
   }
 
   //Check if user is  already in database
-  const userFound = findUserByEmail(email, userDatabase);
+  const userFound = getUserByEmail(email, userDatabase);
   if (userFound) {
     res.status(403).send(`User with ${email} already exists!`);
     return;
