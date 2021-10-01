@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const salt = bcrypt.genSaltSync(10);
 const cookieSession = require('cookie-session');
@@ -15,7 +14,6 @@ const {
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
 app.use(
   cookieSession({
     name: "session",
@@ -184,6 +182,11 @@ app.post('/urls/:shortURL', (req, res) => {
   res.redirect('/urls');
 });
 
+//Add GET route to display delete URL
+app.get('/urls/:shortURL/delete', (req, res) => {
+  res.send('You do not have permission to delete this URL.');
+}); 
+
 //Add POST route to remove URL
 app.post('/urls/:shortURL/delete', (req, res) => {
   //Retrieve current user id
@@ -192,8 +195,9 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   
   if (urlDatabase[urlId].userID === userId) {
     delete urlDatabase[urlId];
+    res.redirect('/urls');
   }
-  res.redirect('/urls');
+  
 });
 
 //Add route for login
@@ -252,8 +256,9 @@ app.post('/register', (req, res) => {
   let password = req.body.password;
 
   //Check if email and password are not empty strings
-  if (email === '' && password === '') {
+  if (email === '' || password === '') {
     res.status(400).send('Please enter valid email and/or password');
+    return;
   }
 
   //Check if user is  already in database
