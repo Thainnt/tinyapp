@@ -17,9 +17,9 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(
-  cookieSession ({
-  name: "session",
-  keys: ['value', 'another value'],
+  cookieSession({
+    name: "session",
+    keys: ['value', 'another value'],
   })
 );
 
@@ -61,28 +61,32 @@ const urlsForUser = id => {
   return urlsForId;
 };
 
-// CREATE ROUTES
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
 //Route for URL Database
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+//Route for user Database
 app.get("/user.json", (req, res) => {
   res.json(userDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+// Create redirect routes for /
+app.get("/", (req, res) => {
+  //Retrieve current user id
+  const userId = req.session.userId;
+
+  if (userId) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
 });
 
-//Display URLs in database
+//Display URLs in database belong to a logged in user
 app.get('/urls', (req, res) => {
   //Retrieve current user id
-  const userId = req.session.user_id; //req.cookies['user_id'];
+  const userId = req.session.userId;
 
   //Filter urls belong to userId
   const filteredUrls = urlsForUser(userId);
@@ -98,114 +102,157 @@ app.get('/urls', (req, res) => {
 //Add GET route for new link creation
 app.get('/urls/new', (req, res) => {
   //Retrieve current user id
-  const userId = req.session.user_id; //req.cookies['user_id'];
-  console.log(userId);
-
+  const userId = req.session.userId;
+  
   if (userId) {
     const templateVars = {
       urls: urlDatabase,
       activeUser: userDatabase[userId]
     };
-    
     res.render('urls_new', templateVars);
+
   } else {
-    templateVars = {
+    const templateVars = {
       activeUser: null
-    }
+    };
     res.render('login', templateVars);
   }
-});
-
-//Add POST route for form submission and redirect to newly create link
-app.post('/urls', (req, res) => {
-  //Retrieve current user id
-  const userId = req.session.user_id; //req.cookies['user_id'];
-
-  const generateShortURL = generateRandomString(6);
-  urlDatabase[generateShortURL] = {};
-  urlDatabase[generateShortURL].longURL = req.body.longURL;
-  urlDatabase[generateShortURL].userID = userId;
-  console.log(urlDatabase);
-  res.redirect(`/urls/${generateShortURL}`);
 });
 
 //Create a route for displaying a single URL
 app.get('/urls/:shortURL', (req, res) => {
   //Retrieve current user id
-  const userId = req.session.user_id; //req.cookies['user_id'];
-
+  const userId = req.session.userId;
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL;
+  
+  let longURL = '';
+  let isOwner = false;
+
+  //Check if shorURL exists in urlDatabase
+  if (Object.keys(urlDatabase).includes(shortURL)) {
+    longURL = urlDatabase[shortURL].longURL;
+    isOwner = urlDatabase[shortURL].userID === userId;
+  }
+  
   const activeUser = userDatabase[userId];
   
-  const isOwner = urlDatabase[shortURL].userID === userId;
-
-  console.log(isOwner);
-
   const templateVars = {
     shortURL,
     longURL,
     isOwner,
     activeUser
   };
-
+  
   res.render('urls_show', templateVars);
 });
 
 //Redirect the short URL to the original long URL
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
+  const shortURL = req.params.shortURL;
+  let longURL = '';
+
+  //Check if shorURL exists in urlDatabase
+  if (Object.keys(urlDatabase).includes(shortURL)) {
+    longURL = urlDatabase[shortURL].longURL;
+    res.redirect(longURL);
+  }
+  res.status(400).send('Invalid URL - Page not found');
 });
 
-//Add POST route to remove URL
-app.post('/urls/:shortURL/delete', (req, res) => {
+//Add POST route for form submission and redirect to new link
+app.post('/urls', (req, res) => {
   //Retrieve current user id
-  const userId = req.session.user_id; //req.cookies['user_id'];
-  const activeUser = userDatabase[userId];
-
-  if (urlDatabase[req.body.shortURL].userID === userId) {
-    delete urlDatabase[req.body.shortURL];
-  }
-
-  res.redirect('/urls');
+  const userId = req.session.userId;
+  const generateShortURL = generateRandomString(6);
+  
+  urlDatabase[generateShortURL] = {};
+  urlDatabase[generateShortURL].longURL = req.body.longURL;
+  urlDatabase[generateShortURL].userID = userId;
+  
+  res.redirect(`/urls/${generateShortURL}`);
 });
 
 //Add POST route to update URL
 app.post('/urls/:shortURL', (req, res) => {
   //Retrieve current user id
-  const userId = req.session.user_id; //req.cookies['user_id'];
-  const activeUser = userDatabase[userId];
+  const userId = req.session.userId;
+  const urlId = req.params.shortURL;
 
-  if (urlDatabase[req.params.shortURL].userID === userId) {
-    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+  if (urlDatabase[urlId].userID === userId) {
+    urlDatabase[urlId].longURL = req.body.longURL;
   }
   res.redirect('/urls');
 });
 
-//Add POST route for logout
-app.post('/logout', (req, res) => {
-  // res.clearCookie('user_id');
-  req.session = null;
+//Add POST route to remove URL
+app.post('/urls/:shortURL/delete', (req, res) => {
+  //Retrieve current user id
+  const userId = req.session.userId;
+  const urlId = req.body.shortURL;
+  
+  if (urlDatabase[urlId].userID === userId) {
+    delete urlDatabase[urlId];
+  }
   res.redirect('/urls');
+});
+
+//Add route for login
+app.get('/login', (req, res) => {
+  //Retrieve current user id
+  const userId = req.session.userId;
+
+  if (userId) {
+    res.redirect('/urls');
+    return;
+  }
+
+  const templateVars = {
+    activeUser: null
+  };
+  res.render('login', templateVars);
 });
 
 // Add GET route for register page
 app.get('/register', (req, res) => {
-  templateVars = {
-    activeUser: null
+  //Retrieve current user id
+  const userId = req.session.userId;
+
+  if (userId) {
+    res.redirect('/urls');
+    return;
   }
+
+  const templateVars = {
+    activeUser: null
+  };
   res.render('registration', templateVars);
+});
+
+//Add login handler
+app.post('/login', (req, res) => {
+  //Retrieve submitted data
+  const {email, password} = req.body;
+
+  //Check if login information is correct
+  const activeUser = authenticateUser(email, password, userDatabase);
+  if (activeUser) {
+    req.session.userId = activeUser.id;
+
+    res.redirect('/urls');
+    return;
+  }
+
+  res.status(400).send('Incorrect email or password');
 });
 
 //Add resigtration handler
 app.post('/register', (req, res) => {
   //Retrieve submitted data
-  console.log('register data: ', req.body);
   const email = req.body.email;
   let password = req.body.password;
+
   //Check if email and password are not empty strings
-  if (email ==='' && password === '') {
+  if (email === '' && password === '') {
     res.status(400).send('Please enter valid email and/or password');
   }
 
@@ -216,43 +263,22 @@ app.post('/register', (req, res) => {
     return;
   }
 
-  //hash user input password
+  //Hash user input password
   password = bcrypt.hashSync(password, salt);
+
   //Add user into database if this is a new user
   const userID = createNewUser(email, password, userDatabase);
-  console.log('new user: ', userDatabase[userID]);
-  // Set user_id to cookie value
-  // res.cookie('user_id', userID);
-  req.session.user_id = userID;
+
+  // Set userId to cookie value
+  req.session.userId = userID;
 
   res.redirect('/urls');
 });
 
-//Add route for login
-app.get('/login', (req, res) => {
-  templateVars = {
-    activeUser: null
-  }
-  res.render('login', templateVars);
-});
-
-//Add login handler
-app.post('/login', (req, res) => {
-  //Retrieve submitted data
-  const {email, password} = req.body;
-  console.log('login info: ', {email, password});
-
-  //Check if login information is correct
-  const activeUser = authenticateUser(email, password, userDatabase);
-  if (activeUser) {
-    // res.cookie('user_id', activeUser.id);
-    req.session.user_id = activeUser.id;
-
-    res.redirect('/urls');
-    return;
-  }
-
-  res.status(400).send('Incorrect email or password');
+//Add POST route for logout
+app.post('/logout', (req, res) => {
+  req.session = null;
+  res.redirect('/urls');
 });
 
 app.listen(PORT, () => {
