@@ -185,7 +185,7 @@ app.post('/urls/:shortURL', (req, res) => {
 //Add GET route to display delete URL
 app.get('/urls/:shortURL/delete', (req, res) => {
   res.send('You do not have permission to delete this URL.');
-}); 
+});
 
 //Add POST route to remove URL
 app.post('/urls/:shortURL/delete', (req, res) => {
